@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mestrado de RPG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700&family=Alegreya+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#edeef4; --surface:#f8f8fc; --surface2:#e2e4ee; --field:#ffffff;
+  --fg:#1c1e2d; --muted:#5b5f78; --line:#cdd0e0;
+  --accent:#1d6b74; --accent-fg:#ffffff; --gold:#8f6310;
+  --danger:#a52f3b; --ok:#2b7a4b; --warn:#9a6210;
+  --display:"Alegreya SC",Georgia,serif; --body:"Alegreya Sans",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  --r:6px; color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#12141f; --surface:#1a1d2c; --surface2:#242839; --field:#141726;
+  --fg:#e6e7f2; --muted:#9a9eb8; --line:#2f344b;
+  --accent:#4cc2c9; --accent-fg:#0b1a1c; --gold:#dcaa4a;
+  --danger:#e57a85; --ok:#62c18a; --warn:#e3a64e; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:400 17px/1.45 var(--body);padding:20px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+[hidden]{display:none!important}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{width:100%;min-width:0;background:var(--field);border:1px solid var(--line);border-radius:var(--r);padding:.42rem .6rem}
+input[readonly],textarea[readonly]{background:transparent;border-style:dashed;color:var(--muted)}
+textarea{resize:vertical;min-height:5.5rem;line-height:1.45}
+input[type=checkbox]{width:1.15rem;height:1.15rem;padding:0;accent-color:var(--accent)}
+input[type=number]{font-family:var(--mono);font-size:.95rem}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label.f{display:flex;flex-direction:column;gap:.2rem;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;min-width:0}
+label.f input,label.f select,label.f textarea{text-transform:none;letter-spacing:0;font-size:1rem;color:var(--fg);font-weight:400}
+label.f input[readonly],label.f textarea[readonly]{color:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:.4rem;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:.4rem .85rem;cursor:pointer;font-weight:500;line-height:1.2;text-decoration:none;color:var(--fg)}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:700}
+.btn.sm{padding:.22rem .55rem;font-size:.9rem}
+.btn.danger:hover,.btn.armed{border-color:var(--danger);color:var(--danger)}
+.btn.armed{font-weight:700}
+.btn:disabled{opacity:.4;cursor:default}
+.x{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:1.3rem;line-height:1;padding:.2rem .45rem;border-radius:var(--r)}
+.x:hover{color:var(--danger)}
+.row-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hint{color:var(--muted);font-size:.92rem;margin:0}
+.empty{color:var(--muted);font-style:italic;margin:.3rem 0}
+.msg{min-height:1.4em;font-size:.95rem;color:var(--muted);margin-bottom:8px}
+.msg.err{color:var(--danger)}
+
+/* topo */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-bottom:16px}
+.brand{display:flex;flex-direction:column;gap:2px;flex:1 1 260px;min-width:0}
+.brand small{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.brand h1{font-size:1.9rem;line-height:1.1;overflow-wrap:anywhere}
+.who{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.92rem;color:var(--muted)}
+.who b{color:var(--fg);font-weight:500;overflow-wrap:anywhere}
+.badge{font-size:.78rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;border:1px solid currentColor;border-radius:99px;padding:.05rem .6rem;white-space:nowrap}
+.badge.master{color:var(--gold)}.badge.player{color:var(--accent)}.badge.npc{color:var(--ok)}
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:22px;scrollbar-width:thin}
+.tabs button{padding:.6rem 1.1rem;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;color:var(--muted);font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:.04em;white-space:nowrap;cursor:pointer}
+.tabs button:hover{color:var(--fg)}
+.tabs button[aria-current=page]{color:var(--fg);border-bottom-color:var(--accent)}
+
+/* telas de entrada */
+.center{max-width:440px;margin:6vh auto 0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:18px;min-width:0}
+.panel>h2{font-size:1.15rem;color:var(--gold);letter-spacing:.05em;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.stack{display:grid;gap:12px}
+.choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.choice button{text-align:left;border:1px solid var(--line);background:var(--field);border-radius:10px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.choice button:hover,.choice button[aria-pressed=true]{border-color:var(--accent)}
+.choice button[aria-pressed=true]{background:var(--surface2)}
+.choice strong{font-family:var(--display);font-size:1.2rem}
+.choice span{color:var(--muted);font-size:.95rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{font-size:1.1rem;overflow-wrap:anywhere}
+.card .meta{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+.codebox{font-family:var(--mono);font-size:.82rem}
+
+/* layout da mesa */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;align-items:start}
+.side{position:sticky;top:12px}
+.grid{display:grid;gap:12px}
+.g-id{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.charbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:18px}
+.charbar label.f{flex:1 1 220px}
+.vitals{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.vbox{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--field);display:flex;flex-direction:column;gap:6px;min-width:0}
+.vbox>span{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.vbox input{border:0;background:transparent;padding:0;font-family:var(--mono);font-size:1.6rem;font-weight:500;width:100%}
+.hp-line{display:flex;align-items:center;gap:6px}
+.hp-line .slash{color:var(--muted);font-family:var(--mono)}
+.bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--ok);transition:width .2s}
+.bar>i.low{background:var(--warn)}.bar>i.crit{background:var(--danger)}
+.hp-btns{display:flex;gap:4px;flex-wrap:wrap}
+.attrs{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:12px}
+.attr{border:1px solid var(--line);border-radius:8px;background:var(--field);padding:8px;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.attr .attr-name{text-align:center;font-family:var(--display);font-weight:700;letter-spacing:.06em;border:0;background:transparent;padding:0;font-size:1rem;color:var(--gold)}
+.mod{font-family:var(--mono);font-size:1.9rem;font-weight:500;line-height:1}
+.attr .attr-val{width:4.2rem;text-align:center}
+.attr-act{display:flex;gap:4px;align-items:center}
+.attr .tot{font-size:.85rem;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
+.attr .tot b{font-family:var(--mono);color:var(--fg);font-weight:500}
+.attr .base{display:flex;align-items:center;gap:6px;font-size:.75rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.fxb{font-family:var(--mono);font-size:.75rem;font-weight:700;border:1px solid currentColor;border-radius:99px;padding:0 .45rem}
+.fxb.up{color:var(--ok)}.fxb.down{color:var(--danger)}
+.btn.pen{padding:.22rem .5rem}.btn.pen svg{width:1rem;height:1rem;display:block}
+.btn.pen[aria-expanded=true]{border-color:var(--accent);color:var(--accent)}
+.attr.open{grid-column:1/-1}
+.fx{border-top:1px solid var(--line);padding-top:10px;margin-top:2px;display:grid;gap:8px;width:100%}
+.fx h3{font-size:.95rem;color:var(--gold);letter-spacing:.05em}
+.fx-row{display:grid;grid-template-columns:auto minmax(0,1fr) 5rem auto;gap:8px;align-items:center}
+.fx-row.off input[type=text]{color:var(--muted);text-decoration:line-through}
+.fx-row input.up{color:var(--ok)}.fx-row input.down{color:var(--danger)}
+.fx-add{display:flex;gap:8px;flex-wrap:wrap}
+.mm{border:1px solid var(--line);border-radius:8px;background:var(--field);padding:12px;margin-bottom:14px;display:grid;gap:10px}
+.mm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+.mm-cell{display:flex;flex-direction:column;align-items:center;gap:3px;border:1px solid var(--line);border-radius:6px;padding:5px 4px;background:var(--surface)}
+.mm-cell span{font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+.mm-cell input{text-align:center;padding:.2rem;width:100%}
+.mm-cell.custom{border-color:var(--gold)}.mm-cell.custom span{color:var(--gold);font-weight:700}
+.rows{display:flex;flex-direction:column;gap:8px}
+.r-skill{display:grid;grid-template-columns:minmax(0,1fr) 5rem auto auto;gap:8px;align-items:center}
+.r-item{display:grid;grid-template-columns:minmax(0,1.2fr) 4.5rem minmax(0,1.5fr) auto;gap:8px;align-items:center}
+.r-cust{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto;gap:8px;align-items:center}
+.abil{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--field);display:grid;gap:8px}
+.abil .head{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto;gap:8px;align-items:center}
+.abil textarea{min-height:4rem}
+.idwrap{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:start}
+.photo-box{display:flex;flex-direction:column;gap:8px;width:150px}
+.photo{width:150px;height:150px;border:1px dashed var(--line);border-radius:10px;background:var(--field);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.9rem}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-act{display:flex;gap:6px;flex-wrap:wrap}
+.photo-act .btn{position:relative;cursor:pointer}
+.vh{position:absolute;width:1px;height:1px;padding:0;margin:0;border:0;overflow:hidden;clip:rect(0 0 0 0);opacity:0}
+.btn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.lockn{color:var(--muted);font-size:.88rem;margin:0 0 10px}
+
+/* dados */
+.dice-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.dice-row .btn{justify-content:center;font-family:var(--mono);font-size:.9rem;padding:.45rem 0}
+.dice-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.result{border:1px dashed var(--line);border-radius:8px;padding:10px;text-align:center;min-height:6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;margin-bottom:10px}
+.result .total{font-family:var(--mono);font-size:2.8rem;line-height:1;font-weight:500}
+.result .total.crit{color:var(--ok)}.result .total.fumble{color:var(--danger)}
+.result .expr{font-size:.85rem;color:var(--muted);overflow-wrap:anywhere}
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:.92rem;max-height:16rem;overflow:auto}
+.log li{display:flex;gap:8px;align-items:baseline;border-top:1px solid var(--line);padding-top:4px}
+.log b{font-family:var(--mono);min-width:2.4rem}
+.log span{flex:1;min-width:0;overflow-wrap:anywhere}
+.log small{color:var(--muted)}
+
+/* anotações, npcs, roteiro */
+.split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}
+.nlist{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:62vh;overflow:auto}
+.nitem{text-align:left;border:1px solid var(--line);background:var(--field);border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.nitem.on{border-color:var(--accent);background:var(--surface2)}
+.nitem .nt{font-weight:700;overflow-wrap:anywhere}
+.nitem .nm{font-size:.82rem;color:var(--muted)}
+.nrow{display:flex;gap:10px;align-items:center;min-width:0}
+.ntx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.nthumb{width:38px;height:38px;border-radius:6px;object-fit:cover;flex:none}
+.pinned{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold);border-radius:99px;padding:0 .4rem;margin-right:.3rem;vertical-align:1px}
+.ned{display:grid;gap:12px}
+.ned textarea.big{min-height:46vh;font-size:1.05rem}
+.sc-sum{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;margin-bottom:14px}
+.prog{flex:1 1 220px;display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--muted)}
+.prog .bar>i{background:var(--accent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:.2rem .8rem;cursor:pointer;font-size:.92rem}
+.chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:700}
+details.scene{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+details.scene>summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:12px 16px}
+details.scene>summary::-webkit-details-marker{display:none}
+details.scene>summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+details.scene[open]>summary::before{transform:rotate(90deg)}
+.sc-n{font-family:var(--mono);font-size:.82rem;color:var(--muted)}
+.sc-title{font-family:var(--display);font-weight:700;font-size:1.15rem;flex:1 1 200px;min-width:0;overflow-wrap:anywhere}
+.tag{font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:.05rem .6rem}
+.pill{font-size:.8rem;font-weight:700;border-radius:99px;padding:.05rem .65rem;border:1px solid currentColor}
+.pill.plan{color:var(--muted)}.pill.andamento{color:var(--accent)}.pill.ok{color:var(--ok)}
+.sc-body{padding:2px 16px 16px;display:grid;gap:12px}
+.g-sc{grid-template-columns:minmax(0,2fr) repeat(2,minmax(0,1fr))}
+.objs{display:flex;flex-direction:column;gap:6px}
+.obj{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center}
+.obj.is-done input[type=text]{text-decoration:line-through;color:var(--muted)}
+.mtable{width:100%;border-collapse:collapse;font-size:.95rem}
+.mtable th,.mtable td{text-align:left;padding:6px 8px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+.mtable th{font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-top:0}
+.scroll-x{overflow-x:auto}
+.npc-card{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--field);margin-bottom:12px}
+.npc-card .photo,.npc-card .photo-box{width:110px}.npc-card .photo{height:110px}
+@media (max-width:860px){.cols,.split{grid-template-columns:minmax(0,1fr)}.side{position:static}.g-sc{grid-template-columns:minmax(0,1fr)}.nlist{max-height:30vh}}
+@media (max-width:560px){.idwrap,.npc-card{grid-template-columns:minmax(0,1fr)}.r-item{grid-template-columns:minmax(0,1fr) 4.5rem auto}.r-item .r-note{grid-column:1/-1;order:5}.brand h1{font-size:1.6rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,sendPasswordResetEmail} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {getFirestore,doc,collection,setDoc,getDoc,getDocs,updateDoc,deleteDoc,onSnapshot,query,orderBy,limit,where,writeBatch,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+/* ===== CONFIGURAÇÃO: cole aqui os dados do seu projeto Firebase (veja o LEIA-ME) ===== */
+const firebaseConfig={
+  apiKey:'COLE_AQUI',
+  authDomain:'SEU-PROJETO.firebaseapp.com',
+  projectId:'SEU-PROJETO',
+  appId:'COLE_AQUI'
+};
+/* ================================================================================== */
+
+const CONFIGURED=!/^COLE/.test(firebaseConfig.apiKey);
+let auth,db;
+const APP=document.getElementById('app');
+const $=(s,r)=>(r||document).querySelector(s);
+const uid8=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sgn=n=>n>=0?'+'+n:'−'+Math.abs(n);
+const fmtDate=t=>{try{return new Date(t).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}catch(e){return ''}};
+const TAGS=['Sessão','NPC','Local','Item','Regra','Ideia','Outro'];
+const TYPES=['Exploração','Combate','Social','Mistério','Descanso'];
+const STATUS=['Planejado','Em andamento','Concluído'];
+const DICE=[4,6,8,10,12,20,100];
+const IDENT=['name','cls','race','bg','align'];
+const PLAYER_FIELDS=['name','cls','race','bg','align','story','look','traits','skills','photo'];
+const MASTER_BLOCKED=IDENT;
+const ROLE_LABEL={master:'Mestre',player:'Player',npc:'NPC'};
+
+/* ---------- estado global ---------- */
+let me=null,prof=null,myTables=[],homeTab='master',T=null,screen='loading',authMode='login',authMsg='',joinInfo=null,unsubHome=null;
+let dirty=false,toastT=null,dCount=1,dMod=0,lastRoll=null,creating={name:'',cls:'',race:'',bg:'',align:'',story:'',look:'',traits:'',i1:'',i2:'',i3:''};
+const openFx=new Set(),openScenes=new Set();let rulesOpen=false,scFilter='Todas',nq='';
+
+const MM=()=>(T&&T.doc&&T.doc.modMap)||{};
+function mod(v){const n=Math.round(Number(v)||0),m=MM()[n];if(m!==undefined&&m!==null&&m!==''&&!isNaN(Number(m)))return Number(m);return Math.floor((Number(v)-10)/2)}
+const fxNet=a=>(a.fx||[]).reduce((s,x)=>s+(x.on?Number(x.val)||0:0),0);
+const eff=a=>(Number(a.val)||0)+fxNet(a);
+
+/* ---------- gravação com atraso e proteção contra eco ---------- */
+const pend=new Map(),deferred={};
+function schedule(key,fn,ms=450){
+  clearTimeout(pend.get(key));
+  pend.set(key,setTimeout(async()=>{
+    try{await fn()}catch(e){toast(e&&e.code==='permission-denied'?'Sem permissão para salvar essa alteração.':'Erro ao salvar: '+(e&&e.message||e),true)}
+    pend.delete(key);
+    if(!pend.size){const d=Object.values(deferred);for(const k in deferred)delete deferred[k];d.forEach(f=>f())}
+  },ms));
+}
+function apply(key,fn){if(pend.size)deferred[key]=fn;else fn()}
+function toast(t,err){const el=$('#msg');if(!el)return;el.textContent=t;el.className='msg'+(err?' err':'');clearTimeout(toastT);toastT=setTimeout(()=>{if(el)el.textContent=''},5000)}
+const typing=()=>{const a=document.activeElement;return !!(a&&APP.contains(a)&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&!['checkbox','file','button'].includes(a.type))))};
+function softRender(){if(typing())dirty=true;else render()}
+document.addEventListener('focusout',()=>setTimeout(()=>{if(dirty&&!typing()){dirty=false;render()}},60));
+
+/* ---------- papéis e permissões ---------- */
+const role=()=>T&&T.role;
+function canChar(f){const r=role();if(r==='master')return !MASTER_BLOCKED.includes(f);if(r==='player')return PLAYER_FIELDS.includes(f);return false}
+function canList(l){const r=role();if(r==='master')return true;if(r==='player')return l==='skills';return false}
+function VC(){const r=role();if(r==='master')return T.chars[T.view]||null;if(r==='player')return T.chars[me.uid]||null;return null}
+const ref=(...p)=>doc(db,'tables',T.id,...p);
+const col=(...p)=>collection(db,'tables',T.id,...p);
+const charRef=id=>ref('chars',id);
+function myName(){const r=role();if(r==='player'){const c=T.chars[me.uid];return (c&&c.name)||me.email.split('@')[0]}if(r==='npc'){const n=T.npcs.find(x=>x.id===T.member.npcId);return n?n.name:'NPC'}return 'Mestre'}
+
+/* ---------- imagens ---------- */
+function readImage(file){
+  return new Promise((res,rej)=>{
+    if(!file||!/^image\//.test(file.type)||file.size>20*1024*1024)return rej(new Error('img'));
+    const fr=new FileReader();fr.onerror=()=>rej(new Error('img'));
+    fr.onload=()=>{const im=new Image();im.onerror=()=>rej(new Error('img'));
+      im.onload=()=>{const M=400,w=im.naturalWidth||1,h=im.naturalHeight||1,k=Math.min(1,M/Math.max(w,h));
+        const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(w*k));cv.height=Math.max(1,Math.round(h*k));
+        const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(im,0,0,cv.width,cv.height);
+        try{res(cv.toDataURL('image/jpeg',0.8))}catch(e){rej(e)}};
+      im.src=String(fr.result)};
+    fr.readAsDataURL(file);
+  });
+}
+function photoHtml(kind,img,alt,editable){
+  return `<div class="photo-box"><div class="photo">${img?`<img src="${esc(img)}" alt="Foto de ${esc(alt||'personagem')}">`:'<span>Sem foto</span>'}</div>`
+   +(editable?`<div class="photo-act"><label class="btn sm">${img?'Trocar foto':'Adicionar foto'}<input class="vh" type="file" accept="image/*" data-up="${kind}" aria-label="Escolher imagem"></label>${img?`<button class="btn sm" data-act="photo-del" data-k="${kind}">Remover</button>`:''}</div>`:'')+'</div>';
+}
+const PEN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+
+/* ---------- autenticação e perfil ---------- */
+const AUTH_ERR={'auth/invalid-email':'E-mail inválido.','auth/missing-password':'Digite a senha.','auth/weak-password':'A senha precisa de ao menos 6 caracteres.','auth/email-already-in-use':'Esse e-mail já tem conta. Use Entrar.','auth/invalid-credential':'E-mail ou senha incorretos.','auth/user-not-found':'E-mail ou senha incorretos.','auth/wrong-password':'E-mail ou senha incorretos.','auth/too-many-requests':'Muitas tentativas. Aguarde um pouco.','auth/network-request-failed':'Sem conexão com a internet.','auth/missing-email':'Digite o e-mail.'};
+async function boot(){
+  if(!CONFIGURED){screen='setup';render();return}
+  const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app);
+  onAuthStateChanged(auth,async u=>{
+    closeTable();if(unsubHome){unsubHome();unsubHome=null}
+    if(!u){me=null;prof=null;myTables=[];screen='auth';render();return}
+    me={uid:u.uid,email:u.email||''};
+    try{
+      const ps=await getDoc(doc(db,'users',me.uid));
+      prof=ps.exists()?ps.data():null;
+      if(!prof||!prof.mode){screen='mode';render();}
+      else {homeTab=prof.mode;}
+      unsubHome=onSnapshot(collection(db,'users',me.uid,'tables'),s=>{myTables=s.docs.map(d=>({id:d.id,...d.data()}));if(screen==='home')softRender()});
+      if(prof&&prof.mode)route();
+    }catch(e){screen='auth';authMsg='Não foi possível carregar seu perfil: '+(e.message||e);render()}
+  });
+  window.addEventListener('hashchange',route);
+}
+function route(){
+  if(!me)return;
+  const h=location.hash.replace(/^#\/?/,'').split('/');
+  if(prof&&!prof.mode){screen='mode';return render()}
+  if(h[0]==='t'&&h[1]){if(!T||T.id!==h[1])openTable(h[1]);else{screen='table';render()}return}
+  if(h[0]==='join'&&h[1]&&h[2]){openJoin(h[1],h[2]);return}
+  closeTable();screen='home';render();
+}
+
+/* ---------- mesa: abrir e assinar dados ---------- */
+function closeTable(){if(T){T.unsubs.forEach(u=>{try{u()}catch(e){}});}T=null;pend.forEach(clearTimeout);pend.clear();for(const k in deferred)delete deferred[k]}
+async function openTable(id){
+  closeTable();
+  T={id,loading:true,error:'',doc:null,role:null,member:null,members:[],chars:{},npcs:[],notes:[],scenes:[],rolls:[],unsubs:[],tab:null,view:null,selNote:null};
+  screen='table';render();
+  const t=T;
+  try{
+    const ms=await getDoc(doc(db,'tables',id,'members',me.uid));
+    if(T!==t)return;
+    if(!ms.exists()){t.error='Você não tem acesso a esta mesa.';t.loading=false;return render()}
+    t.member=ms.data();t.role=t.member.role;
+    t.tab=t.role==='master'?'fichas':t.role==='player'?'ficha':'npc';
+    subscribe(t);
+  }catch(e){t.error='Não foi possível abrir a mesa: '+(e.code==='permission-denied'?'sem acesso.':(e.message||e));t.loading=false;render()}
+}
+function sub(t,key,q,fn){
+  t.unsubs.push(onSnapshot(q,s=>{if(T!==t)return;apply(key,()=>{if(T!==t)return;fn(s);softRender()})},e=>{if(T!==t)return;t.error='Erro ao ler dados ('+key+'): '+(e.code==='permission-denied'?'sem permissão.':(e.message||e));render()}));
+}
+function subscribe(t){
+  const id=t.id,C=(...p)=>collection(db,'tables',id,...p);
+  sub(t,'table',doc(db,'tables',id),s=>{if(!s.exists()){t.error='Esta mesa não existe mais.'}else{t.doc=s.data()}t.loading=false});
+  sub(t,'members',C('members'),s=>{t.members=s.docs.map(d=>d.data())});
+  sub(t,'npcs',C('npcs'),s=>{t.npcs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''))});
+  sub(t,'rolls',query(C('rolls'),orderBy('ts','desc'),limit(20)),s=>{t.rolls=s.docs.map(d=>d.data())});
+  sub(t,'notes',query(C('notes'),where('authorUid','==',me.uid)),s=>{t.notes=s.docs.map(d=>({id:d.id,...d.data()}))});
+  if(t.role==='master'){
+    sub(t,'chars',C('chars'),s=>{t.chars={};s.docs.forEach(d=>{t.chars[d.id]=d.data()});if(!t.chars[t.view])t.view=Object.keys(t.chars)[0]||null});
+    sub(t,'scenes',C('scenes'),s=>{t.scenes=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0))});
+  }else if(t.role==='player'){
+    sub(t,'chars',doc(db,'tables',id,'chars',me.uid),s=>{t.chars={};if(s.exists())t.chars[me.uid]=s.data()});
+  }
+}
+
+/* ---------- convite ---------- */
+async function openJoin(tid,code){
+  closeTable();screen='join';joinInfo={tid,code,loading:true,error:'',kind:'player',npcId:'',npcs:[]};render();
+  const ji=joinInfo;
+  try{
+    const m=await getDoc(doc(db,'tables',tid,'members',me.uid));
+    if(m.exists()){location.hash='#/t/'+tid;return}
+  }catch(e){}
+  try{
+    const inv=await getDoc(doc(db,'tables',tid,'invites',code));
+    if(joinInfo!==ji)return;
+    if(!inv.exists()){ji.error='Este link de convite não é válido ou foi cancelado pelo mestre.';ji.loading=false;return render()}
+    ji.tableName=inv.data().tableName||'Mesa';ji.loading=false;
+    try{const ns=await getDocs(collection(db,'tables',tid,'npcs'));ji.npcs=ns.docs.map(d=>({id:d.id,...d.data()})).filter(n=>!n.claimedBy)}catch(e){ji.npcs=[]}
+    render();
+  }catch(e){ji.error='Não foi possível ler o convite.';ji.loading=false;render()}
+}
+async function doJoin(){
+  const ji=joinInfo,kind=ji.kind;
+  if(kind==='npc'&&!ji.npcId){toast('Escolha qual NPC você vai atuar.',true);return}
+  try{
+    const b=writeBatch(db);
+    const mem={uid:me.uid,email:me.email,role:kind,inviteCode:ji.code,joinedAt:Date.now()};
+    if(kind==='npc')mem.npcId=ji.npcId;
+    b.set(doc(db,'tables',ji.tid,'members',me.uid),mem);
+    if(kind==='npc')b.update(doc(db,'tables',ji.tid,'npcs',ji.npcId),{claimedBy:me.uid});
+    b.set(doc(db,'users',me.uid,'tables',ji.tid),{name:ji.tableName,role:kind,ts:Date.now()});
+    await b.commit();
+    location.hash='#/t/'+ji.tid;
+  }catch(e){toast(e.code==='permission-denied'?'Não foi possível entrar. O link pode ter sido cancelado ou esse NPC já foi escolhido.':'Erro: '+(e.message||e),true)}
+}
+const inviteLink=()=>location.href.split('#')[0]+'#/join/'+T.id+'/'+T.doc.inviteCode;
+async function makeInvite(){
+  const code=Array.from(crypto.getRandomValues(new Uint8Array(12))).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const b=writeBatch(db);
+  if(T.doc.inviteCode)b.delete(ref('invites',T.doc.inviteCode));
+  b.set(ref('invites',code),{createdBy:me.uid,tableName:T.doc.name,createdAt:Date.now()});
+  b.update(ref(),{inviteActive:true,inviteCode:code});
+  await b.commit();
+}
+async function revokeInvite(){
+  const b=writeBatch(db);
+  if(T.doc.inviteCode)b.delete(ref('invites',T.doc.inviteCode));
+  b.update(ref(),{inviteActive:false,inviteCode:''});
+  await b.commit();
+}
+
+/* ---------- dados ---------- */
+async function roll(sides,count,md,label){
+  count=Math.max(1,Math.min(50,Math.floor(Number(count)||1)));md=Math.floor(Number(md)||0);
+  const parts=[];let sum=0;for(let i=0;i<count;i++){const r=1+Math.floor(Math.random()*sides);parts.push(r);sum+=r}
+  const total=sum+md;let cls='';if(sides===20&&count===1){if(parts[0]===20)cls='crit';else if(parts[0]===1)cls='fumble'}
+  const expr=count+'d'+sides+(md?(md>0?'+':'−')+Math.abs(md):'')+' ['+parts.join(', ')+']';
+  lastRoll={label,expr,total,cls};renderDice();
+  try{await setDoc(doc(collection(db,'tables',T.id,'rolls')),{uid:me.uid,name:myName(),label:label||'',expr,total,cls,ts:serverTimestamp()})}
+  catch(e){toast('A rolagem apareceu só para você (não foi possível compartilhar).',true)}
+}
+function diceHtml(){
+  return `<section class="panel"><h2>Dados</h2><div class="dice-row">${DICE.map(d=>`<button class="btn" data-act="die" data-n="${d}">d${d}</button>`).join('')}</div>
+  <div class="dice-opts"><label class="f">Quantidade<input id="dCount" type="number" min="1" max="50" value="${dCount}"></label><label class="f">Modificador<input id="dMod" type="number" value="${dMod}"></label></div>
+  <div class="result" id="rollBig"></div><p class="hint" style="margin:0 0 6px">Rolagens da mesa</p><ol class="log" id="rollLog"></ol></section>`;
+}
+function renderDice(){
+  const big=$('#rollBig'),log=$('#rollLog');
+  if(big){if(!lastRoll)big.innerHTML='<span class="expr">Escolha um dado para rolar.</span>';
+    else big.innerHTML=`<div class="total ${lastRoll.cls}">${lastRoll.total}</div><div class="expr">${esc(lastRoll.label?lastRoll.label+' · ':'')}${esc(lastRoll.expr)}${lastRoll.cls==='crit'?' · crítico':lastRoll.cls==='fumble'?' · falha crítica':''}</div>`}
+  if(log&&T)log.innerHTML=T.rolls.length?T.rolls.map(r=>`<li><b>${esc(r.total)}</b><span>${esc(r.name||'')} · ${esc(r.label||r.expr)}<br><small>${esc(r.expr)}</small></span></li>`).join(''):'<li><span><small>Ainda não há rolagens.</small></span></li>';
+}
+
+/* ---------- views ---------- */
+function topbar(sub,badge){
+  return `<header class="top"><div class="brand"><small>Mestrado de RPG</small><h1>${esc(sub||'Mestrado de RPG')}</h1></div>
+   <div class="who">${badge?`<span class="badge ${badge}">${ROLE_LABEL[badge]}</span>`:''}<b>${esc(me?me.email:'')}</b>${me?'<button class="btn sm" data-act="home">Minhas mesas</button><button class="btn sm" data-act="logout">Sair</button>':''}</div></header>`;
+}
+function setupView(){
+  return `<div class="center" style="max-width:640px"><div class="panel"><h2>Falta ligar o Firebase</h2><p>Este site precisa de um projeto Firebase gratuito para o login e para as mesas compartilhadas. Abra o arquivo <b>LEIA-ME</b> e siga os passos. Resumo:</p>
+  <ol><li>Crie o projeto em console.firebase.google.com.</li><li>Ative <b>Authentication</b> com o método E-mail/senha.</li><li>Crie o banco <b>Firestore Database</b>.</li><li>Cole o conteúdo do arquivo <b>firestore.rules</b> na aba Regras e publique.</li><li>Copie as chaves do app web e cole no bloco <b>firebaseConfig</b> no início do script deste arquivo.</li></ol></div></div>`;
+}
+function authView(){
+  const login=authMode==='login';
+  return `<div class="center"><header class="top"><div class="brand"><small>Bem-vindo ao</small><h1>Mestrado de RPG</h1></div></header>
+  <form class="panel stack" id="authForm" novalidate><h2>${login?'Entrar':'Criar conta'}</h2>
+  <label class="f">E-mail<input id="aEmail" type="email" autocomplete="email" inputmode="email" required></label>
+  <label class="f">Senha<input id="aPass" type="password" autocomplete="${login?'current-password':'new-password'}" required></label>
+  <div id="msg" class="msg ${authMsg&&authMsg[0]==='!'?'err':''}" role="status">${esc((authMsg||'').replace(/^!/,''))}</div>
+  <button class="btn pri" type="submit" style="justify-content:center">${login?'Entrar':'Criar conta'}</button>
+  <div class="row-actions" style="justify-content:space-between"><button class="btn sm" type="button" data-act="auth-switch">${login?'Não tenho conta':'Já tenho conta'}</button>${login?'<button class="btn sm" type="button" data-act="auth-reset">Esqueci a senha</button>':''}</div></form></div>`;
+}
+function modeView(){
+  return `<div class="center" style="max-width:600px">${topbar('Como você quer começar?')}<div class="panel"><div class="choice">
+   <button data-act="set-mode" data-m="master"><strong>Mestre</strong><span>Crio mesas, convido jogadores e conduzo a história.</span></button>
+   <button data-act="set-mode" data-m="player"><strong>Player</strong><span>Entro em mesas por convite e jogo com meu personagem.</span></button></div>
+   <p class="hint" style="margin-top:12px">Isso só define a tela inicial. Você pode mestrar uma mesa e jogar em outra com a mesma conta.</p></div></div>`;
+}
+function homeView(){
+  const ms=myTables.filter(t=>t.role==='master'),ps=myTables.filter(t=>t.role!=='master');
+  const list=(arr,empty)=>arr.length?`<div class="cards">${arr.map(t=>`<div class="card"><h3>${esc(t.name||'Mesa')}</h3><div class="meta"><span class="badge ${t.role}">${ROLE_LABEL[t.role]||t.role}</span></div><div class="row-actions"><a class="btn pri sm" href="#/t/${esc(t.id)}">Abrir mesa</a><button class="btn sm danger" data-act="forget" data-id="${esc(t.id)}" data-confirm="Remover da lista?" title="Remove só da sua lista">Remover</button></div></div>`).join('')}</div>`:`<p class="empty">${empty}</p>`;
+  return `${topbar('Minhas mesas')}<nav class="tabs" role="tablist"><button data-act="home-tab" data-t="master" aria-current="${homeTab==='master'?'page':'false'}">Mestrando (${ms.length})</button><button data-act="home-tab" data-t="player" aria-current="${homeTab==='player'?'page':'false'}">Jogando (${ps.length})</button></nav><div id="msg" class="msg" role="status"></div>`
+   +(homeTab==='master'
+     ?`<section class="panel"><h2>Nova mesa</h2><div class="row-actions" style="align-items:end"><label class="f" style="flex:1 1 260px">Nome da mesa<input id="newTableName" maxlength="80" placeholder="Ex.: A Coroa de Cinzas"></label><button class="btn pri" data-act="table-new">Criar mesa</button></div></section>${list(ms,'Você ainda não mestra nenhuma mesa. Crie a primeira acima.')}`
+     :`<section class="panel"><h2>Entrar com convite</h2><div class="row-actions" style="align-items:end"><label class="f" style="flex:1 1 260px">Link enviado pelo mestre<input id="joinLink" placeholder="Cole o link aqui"></label><button class="btn pri" data-act="join-go">Continuar</button></div></section>${list(ps,'Você ainda não joga em nenhuma mesa. Cole acima o link que o mestre enviou.')}`);
+}
+function joinView(){
+  const j=joinInfo;
+  if(j.loading)return `${topbar('Convite')}<p class="empty">Carregando convite…</p>`;
+  if(j.error)return `${topbar('Convite')}<div class="panel"><p>${esc(j.error)}</p><a class="btn" href="#/">Voltar às mesas</a></div>`;
+  return `<div class="center" style="max-width:600px">${topbar('Convite para '+j.tableName)}<div class="panel stack"><h2>Como você quer entrar?</h2><div id="msg" class="msg" role="status"></div>
+   <div class="choice"><button data-act="join-kind" data-k="player" aria-pressed="${j.kind==='player'}"><strong>Player</strong><span>Crio meu personagem e jogo.</span></button><button data-act="join-kind" data-k="npc" aria-pressed="${j.kind==='npc'}"><strong>NPC</strong><span>Atuo um personagem do mestre.</span></button></div>
+   ${j.kind==='npc'?(j.npcs.length?`<label class="f">Qual NPC você vai atuar?<select id="joinNpc"><option value="">Escolha…</option>${j.npcs.map(n=>`<option value="${esc(n.id)}"${n.id===j.npcId?' selected':''}>${esc(n.name||'Sem nome')}</option>`).join('')}</select></label>`:'<p class="empty">Não há NPCs livres nesta mesa. Peça ao mestre para criar um.</p>'):''}
+   <button class="btn pri" data-act="join-do" style="justify-content:center">Entrar na mesa</button></div></div>`;
+}
+
+function tableView(){
+  if(!T||T.loading)return `${topbar('Mesa')}<p class="empty">${T&&T.error?esc(T.error):'Carregando mesa…'}</p>`;
+  if(T.error)return `${topbar('Mesa')}<div class="panel"><p>${esc(T.error)}</p><div class="row-actions"><a class="btn" href="#/">Voltar às mesas</a><button class="btn danger" data-act="forget" data-id="${esc(T.id)}" data-confirm="Remover da lista?">Remover da minha lista</button></div></div>`;
+  const r=role(),tabs=r==='master'?[['fichas','Fichas'],['npcs','NPCs'],['roteiro','Roteiro'],['notas','Anotações'],['mesa','Mesa']]:r==='player'?[['ficha','Minha ficha'],['notas','Anotações'],['mesa','Mesa']]:[['npc','Meu NPC'],['notas','Anotações'],['mesa','Mesa']];
+  let body='';
+  if(T.tab==='fichas')body=sheetScreen();else if(T.tab==='ficha')body=sheetScreen();else if(T.tab==='npc')body=npcSelf();else if(T.tab==='npcs')body=npcsView();
+  else if(T.tab==='roteiro')body=scriptView();else if(T.tab==='notas')body=notesView();else body=tableInfoView();
+  const wide=['fichas','ficha','npc','mesa','npcs'].includes(T.tab);
+  return `${topbar(T.doc.name,r)}<nav class="tabs">${tabs.map(t=>`<button data-act="tab" data-t="${t[0]}" aria-current="${T.tab===t[0]?'page':'false'}">${t[1]}</button>`).join('')}</nav><div id="msg" class="msg" role="status"></div>`
+   +(wide?`<div class="cols"><div>${body}</div><aside class="side">${diceHtml()}</aside></div>`:body);
+}
+
+/* --- ficha --- */
+const da=(s,f,id,l)=>`data-s="${s}" data-f="${f}"${id?` data-id="${id}"`:''}${l?` data-l="${l}"`:''}`;
+const hpPct=c=>c.hpMax>0?Math.max(0,Math.min(100,Math.round(c.hp/c.hpMax*100))):0;
+const hpClass=c=>{const p=c.hpMax>0?c.hp/c.hpMax:0;return p<=.25?'crit':p<=.5?'low':''};
+function fld(label,f,val,type,extra){return `<label class="f">${label}<input ${da('c',f)} type="${type||'text'}" value="${esc(val)}" ${canChar(f)?'':'readonly tabindex="0"'} ${extra||''}></label>`}
+function sheetScreen(){
+  const r=role();let head='';
+  if(r==='master'){
+    const ids=Object.keys(T.chars);
+    if(!ids.length)return `<section class="panel"><h2>Fichas dos jogadores</h2><p class="empty">Nenhum jogador criou ficha ainda. Envie o convite na aba Mesa.</p></section>`;
+    head=`<div class="charbar"><label class="f">Jogador<select id="charSel">${ids.map(i=>{const m=T.members.find(x=>x.uid===i);return `<option value="${esc(i)}"${i===T.view?' selected':''}>${esc(T.chars[i].name||'Sem nome')}${m?' ('+esc(m.email)+')':''}</option>`}).join('')}</select></label></div>`;
+  }
+  const c=VC();
+  if(!c){
+    if(r==='player')return createForm();
+    return `<p class="empty">Escolha uma ficha.</p>`;
+  }
+  return head+sheetHtml(c,r);
+}
+function createForm(){
+  const f=(label,k,ph)=>`<label class="f">${label}<input ${da('cr',k)} value="${esc(creating[k])}" ${ph?`placeholder="${ph}"`:''}></label>`;
+  return `<section class="panel"><h2>Criar meu personagem</h2><p class="hint" style="margin-bottom:12px">Preencha a identidade e a história. Os atributos, a vida e as habilidades são definidos pelo mestre. Você pode escolher até 3 itens iniciais livremente.</p>
+  <div class="grid g-id">${f('Nome','name')}${f('Classe','cls')}${f('Raça','race')}${f('Antecedente','bg')}${f('Alinhamento','align')}</div>
+  <div class="grid" style="margin-top:12px"><label class="f">História<textarea ${da('cr','story')}>${esc(creating.story)}</textarea></label><label class="f">Aparência<textarea ${da('cr','look')}>${esc(creating.look)}</textarea></label><label class="f">Personalidade, ideais e vínculos<textarea ${da('cr','traits')}>${esc(creating.traits)}</textarea></label></div>
+  <div class="grid g-id" style="margin-top:12px">${f('Item inicial 1','i1')}${f('Item inicial 2','i2')}${f('Item inicial 3','i3')}</div>
+  <div class="row-actions" style="margin-top:14px"><button class="btn pri" data-act="char-create">Criar personagem</button></div></section>`;
+}
+function attrHtml(a,m){
+  const open=openFx.has(a.id),net=fxNet(a);
+  let h=`<div class="attr${open?' open':''}"><input class="attr-name" ${da('li','name',a.id,'attrs')} value="${esc(a.name)}" ${m?'':'readonly'} aria-label="Nome do atributo">
+   <div class="mod" data-mod="${a.id}">${sgn(mod(eff(a)))}</div><div class="tot">Total <b data-tot="${a.id}">${eff(a)}</b><span class="fxb ${net>0?'up':'down'}" data-fxb="${a.id}"${net?'':' hidden'}>${sgn(net)}</span></div>
+   <label class="base">Base <input class="attr-val" ${da('li','val',a.id,'attrs')} type="number" value="${a.val}" ${m?'':'readonly'} aria-label="Valor base de ${esc(a.name)}"></label>
+   <div class="attr-act"><button class="btn sm" data-act="roll-attr" data-id="${a.id}">Testar</button>${m?`<button class="btn sm pen" data-act="fx-toggle" data-id="${a.id}" aria-expanded="${open}" aria-label="Editar buffs e debuffs de ${esc(a.name)}" title="Buffs e debuffs">${PEN}</button><button class="x" data-act="del-li" data-l="attrs" data-id="${a.id}" aria-label="Remover atributo">×</button>`:''}</div>`;
+  if(open&&m)h+=`<div class="fx"><h3>Buffs e debuffs</h3>${(a.fx||[]).length?a.fx.map(x=>fxRow(a,x)).join(''):'<p class="empty">Nenhum efeito.</p>'}<div class="fx-add"><button class="btn sm" data-act="fx-add" data-a="${a.id}" data-k="buff">+ Buff</button><button class="btn sm" data-act="fx-add" data-a="${a.id}" data-k="debuff">+ Debuff</button></div></div>`;
+  return h+'</div>';
+}
+function fxRow(a,x){const cls=x.val>0?'up':x.val<0?'down':'',k=` data-a="${a.id}"`;
+  return `<div class="fx-row${x.on?'':' off'}"><input type="checkbox" ${da('fx','on',x.id)}${k}${x.on?' checked':''} aria-label="Efeito ativo"><input type="text" ${da('fx','name',x.id)}${k} value="${esc(x.name)}" aria-label="Nome do efeito"><input type="number" class="${cls}" ${da('fx','val',x.id)}${k} value="${x.val}" aria-label="Valor do efeito"><button class="x" data-act="fx-del"${k} data-id="${x.id}" aria-label="Remover efeito">×</button></div>`}
+function rulesHtml(){
+  let cells='',custom=0;const mm=MM();
+  for(let n=1;n<=30;n++){const isC=mm[n]!==undefined&&mm[n]!==null;if(isC)custom++;cells+=`<label class="mm-cell${isC?' custom':''}"><span>${n}</span><input type="number" data-s="mm" data-f="m" data-v="${n}" value="${mod(n)}" aria-label="Modificador do valor ${n}"></label>`}
+  return `<div class="mm"><p class="hint">Cada caixa é um valor de atributo e o bônus ou penalidade que ele dá no dado. Vale para todos os personagens da mesa. Caixas douradas foram alteradas; as outras seguem (valor − 10) ÷ 2 para baixo.</p><div class="mm-grid">${cells}</div><div class="row-actions"><button class="btn sm danger" data-act="mm-reset" data-confirm="Restaurar tudo?">Restaurar regra padrão</button><span class="hint" id="mmCount">${custom} ${custom===1?'valor alterado':'valores alterados'}</span></div></div>`;
+}
+function sheetHtml(c,r){
+  const m=r==='master',cc=f=>canChar(f);
+  const ro=f=>cc(f)?'':' readonly';
+  const note=r==='player'?'<p class="lockn">Você edita identidade, perícias, história, aparência e personalidade. O resto é do mestre, mas você pode rolar os dados.</p>':'<p class="lockn">Você edita tudo, menos nome, classe, raça, antecedente e alinhamento, que são do jogador.</p>';
+  let h=note;
+  h+=`<section class="panel"><h2>Identidade</h2><div class="idwrap">${photoHtml('char',c.photo,c.name,cc('photo'))}<div class="grid g-id">${fld('Nome','name',c.name)}${fld('Classe','cls',c.cls)}${fld('Raça','race',c.race)}${fld('Antecedente','bg',c.bg)}${fld('Alinhamento','align',c.align)}${fld('Nível','level',c.level,'number','min="1"')}${fld('Experiência','xp',c.xp,'number','min="0"')}</div></div></section>`;
+  h+=`<section class="panel"><h2>Combate</h2><div class="vitals"><div class="vbox"><span>Pontos de vida</span><div class="hp-line"><input ${da('c','hp')} type="number" value="${c.hp}"${ro('hp')} aria-label="PV atuais"><span class="slash">/</span><input ${da('c','hpMax')} type="number" value="${c.hpMax}"${ro('hpMax')} aria-label="PV máximos"></div><div class="bar"><i id="hpbar" class="${hpClass(c)}" style="width:${hpPct(c)}%"></i></div>${m?'<div class="hp-btns"><button class="btn sm" data-act="hp" data-d="-5">−5</button><button class="btn sm" data-act="hp" data-d="-1">−1</button><button class="btn sm" data-act="hp" data-d="1">+1</button><button class="btn sm" data-act="hp" data-d="5">+5</button></div>':''}</div>
+   <div class="vbox"><span>PV temporários</span><input ${da('c','hpTemp')} type="number" value="${c.hpTemp}"${ro('hpTemp')}></div><div class="vbox"><span>Classe de armadura</span><input ${da('c','ac')} type="number" value="${c.ac}"${ro('ac')}></div>
+   <div class="vbox"><span>Iniciativa</span><input ${da('c','init')} type="number" value="${c.init}"${ro('init')}><button class="btn sm" data-act="roll-init">Rolar</button></div><div class="vbox"><span>Deslocamento</span><input ${da('c','speed')} value="${esc(c.speed)}"${ro('speed')}></div></div></section>`;
+  h+=`<section class="panel"><h2>Atributos <span class="row-actions">${m?`<button class="btn sm pen" data-act="rules-toggle" aria-expanded="${rulesOpen}" aria-label="Editar modificadores por valor de atributo" title="Modificadores por valor">${PEN}</button><button class="btn sm" data-act="add-li" data-l="attrs">Adicionar</button>`:''}</span></h2>${m&&rulesOpen?rulesHtml():''}${c.attrs.length?`<div class="attrs">${c.attrs.map(a=>attrHtml(a,m)).join('')}</div>`:'<p class="empty">Nenhum atributo.</p>'}</section>`;
+  h+=`<section class="panel"><h2>Perícias <button class="btn sm" data-act="add-li" data-l="skills">Adicionar</button></h2>${c.skills.length?`<div class="rows">${c.skills.map(s=>`<div class="r-skill"><input ${da('li','name',s.id,'skills')} value="${esc(s.name)}" aria-label="Perícia"><input ${da('li','bonus',s.id,'skills')} type="number" value="${s.bonus}" aria-label="Bônus"><button class="btn sm" data-act="roll-skill" data-id="${s.id}">Rolar</button><button class="x" data-act="del-li" data-l="skills" data-id="${s.id}" aria-label="Remover perícia">×</button></div>`).join('')}</div>`:'<p class="empty">Nenhuma perícia ainda.</p>'}</section>`;
+  h+=`<section class="panel"><h2>Habilidades e magias ${m?'<button class="btn sm" data-act="add-li" data-l="abilities">Adicionar</button>':''}</h2>${c.abilities.length?`<div class="rows">${c.abilities.map(a=>`<div class="abil"><div class="head"><input ${da('li','title',a.id,'abilities')} value="${esc(a.title)}" ${m?'':'readonly'} aria-label="Título"><input ${da('li','tag',a.id,'abilities')} value="${esc(a.tag)}" ${m?'':'readonly'} aria-label="Categoria">${m?`<button class="x" data-act="del-li" data-l="abilities" data-id="${a.id}" aria-label="Remover">×</button>`:'<span></span>'}</div><textarea ${da('li','text',a.id,'abilities')} ${m?'':'readonly'} aria-label="Descrição">${esc(a.text)}</textarea></div>`).join('')}</div>`:'<p class="empty">Nenhuma habilidade registrada.</p>'}</section>`;
+  h+=`<section class="panel"><h2>Inventário ${m?'<button class="btn sm" data-act="add-li" data-l="items">Adicionar</button>':''}</h2>${c.items.length?`<div class="rows">${c.items.map(i=>`<div class="r-item"><input ${da('li','name',i.id,'items')} value="${esc(i.name)}" ${m?'':'readonly'} aria-label="Item"><input ${da('li','qty',i.id,'items')} type="number" value="${i.qty}" ${m?'':'readonly'} aria-label="Quantidade"><input class="r-note" ${da('li','note',i.id,'items')} value="${esc(i.note)}" ${m?'':'readonly'} aria-label="Observação" placeholder="Observação">${m?`<button class="x" data-act="del-li" data-l="items" data-id="${i.id}" aria-label="Remover">×</button>`:'<span></span>'}</div>`).join('')}</div>`:'<p class="empty">Mochila vazia.</p>'}</section>`;
+  h+=`<section class="panel"><h2>Campos personalizados ${m?'<button class="btn sm" data-act="add-li" data-l="customs">Adicionar</button>':''}</h2>${c.customs.length?`<div class="rows">${c.customs.map(i=>`<div class="r-cust"><input ${da('li','label',i.id,'customs')} value="${esc(i.label)}" ${m?'':'readonly'} aria-label="Campo"><input ${da('li','value',i.id,'customs')} value="${esc(i.value)}" ${m?'':'readonly'} aria-label="Valor">${m?`<button class="x" data-act="del-li" data-l="customs" data-id="${i.id}" aria-label="Remover">×</button>`:'<span></span>'}</div>`).join('')}</div>`:'<p class="empty">Nenhum campo extra.</p>'}</section>`;
+  h+=`<section class="panel"><h2>História</h2><div class="grid"><label class="f">História<textarea ${da('c','story')}>${esc(c.story)}</textarea></label><label class="f">Aparência<textarea ${da('c','look')}>${esc(c.look)}</textarea></label><label class="f">Personalidade, ideais e vínculos<textarea ${da('c','traits')}>${esc(c.traits)}</textarea></label></div></section>`;
+  return h;
+}
+
+/* --- npcs --- */
+function npcsView(){
+  const m=T.members;
+  return `<section class="panel"><h2>NPCs da mesa <button class="btn sm pri" data-act="npc-new">Novo NPC</button></h2><p class="hint" style="margin-bottom:12px">Jogadores que entram como NPC escolhem um destes. Eles veem o nome, a imagem e a descrição.</p>
+  ${T.npcs.length?T.npcs.map(n=>{const mm=m.find(x=>x.npcId===n.id);return `<div class="npc-card">${photoHtml('npc:'+n.id,n.img,n.name,true)}<div class="grid"><label class="f">Nome<input ${da('np','name',n.id)} value="${esc(n.name)}"></label><label class="f">Descrição<textarea ${da('np','desc',n.id)}>${esc(n.desc)}</textarea></label><div class="row-actions"><span class="hint">${n.claimedBy?'Atuado por '+esc(mm?mm.email:'um jogador'):'Livre'}</span><button class="btn sm danger" data-act="npc-del" data-id="${n.id}" data-confirm="Excluir?">Excluir</button></div></div></div>`}).join(''):'<p class="empty">Nenhum NPC ainda.</p>'}</section>`;
+}
+function npcSelf(){
+  const n=T.npcs.find(x=>x.id===T.member.npcId);
+  if(!n)return '<p class="empty">Seu NPC não foi encontrado. Fale com o mestre.</p>';
+  return `<section class="panel"><h2>Você está atuando</h2><div class="npc-card">${photoHtml('x',n.img,n.name,false)}<div><h3 style="font-size:1.4rem;margin-bottom:6px">${esc(n.name)}</h3><p style="white-space:pre-wrap;margin:0">${esc(n.desc)||'<span class="hint">O mestre ainda não escreveu a descrição.</span>'}</p></div></div><p class="hint">Como NPC, você rola os dados e tem suas anotações. Ficha, itens e atributos ficam com o mestre.</p></section>`;
+}
+
+/* --- anotações --- */
+function sortedNotes(){const q=nq.trim().toLowerCase();return T.notes.filter(n=>!q||((n.title||'')+' '+(n.tag||'')+' '+(n.body||'')).toLowerCase().includes(q)).sort((a,b)=>((b.pin?1:0)-(a.pin?1:0))||((b.upd||0)-(a.upd||0)))}
+function noteListHtml(){const a=sortedNotes();if(!a.length)return `<p class="empty">${T.notes.length?'Nada encontrado.':'Nenhuma anotação ainda.'}</p>`;
+  return a.map(n=>`<button class="nitem${n.id===T.selNote?' on':''}" data-act="note-sel" data-id="${n.id}"><span class="nrow">${n.tag==='NPC'&&n.img?`<img class="nthumb" src="${esc(n.img)}" alt="">`:''}<span class="ntx"><span class="nt">${n.pin?'<span class="pinned">Fixada</span>':''}${esc(n.title||'Sem título')}</span><span class="nm">${esc(n.tag)} · ${fmtDate(n.upd)}</span></span></span></button>`).join('')}
+function noteEditorHtml(){
+  const n=T.notes.find(x=>x.id===T.selNote);if(!n)return '<div class="panel"><p class="empty">Selecione uma anotação ou crie uma nova.</p></div>';
+  const fields=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))"><label class="f">Título<input ${da('n','title',n.id)} value="${esc(n.title)}"></label><label class="f">Categoria<select ${da('n','tag',n.id)}>${TAGS.map(t=>`<option${t===n.tag?' selected':''}>${t}</option>`).join('')}</select></label></div>`;
+  return `<div class="panel ned">${n.tag==='NPC'?`<div class="idwrap">${photoHtml('note',n.img,n.title,true)}${fields}</div>`:fields}<label class="f">Anotação<textarea class="big" ${da('n','body',n.id)}>${esc(n.body)}</textarea></label><div class="row-actions"><button class="btn" data-act="note-pin" data-id="${n.id}">${n.pin?'Desafixar':'Fixar no topo'}</button><button class="btn danger" data-act="note-del" data-id="${n.id}" data-confirm="Excluir?">Excluir</button></div></div>`;
+}
+function notesView(){
+  if(!T.notes.some(n=>n.id===T.selNote))T.selNote=(sortedNotes()[0]||{}).id||null;
+  return `<p class="hint" style="margin-bottom:12px">Suas anotações são particulares. Só você as vê${role()==='master'?', inclusive os segredos da campanha':''}.</p><div class="split"><div><div class="row-actions"><button class="btn pri" data-act="note-new">Nova anotação</button></div><label class="f" style="margin-top:10px">Buscar<input id="nSearch" type="search" value="${esc(nq)}" placeholder="Título, categoria ou texto"></label><div class="nlist" id="noteList">${noteListHtml()}</div></div><div id="noteEd">${noteEditorHtml()}</div></div>`;
+}
+
+/* --- roteiro (mestre) --- */
+const statusCls=s=>s==='Concluído'?'ok':s==='Em andamento'?'andamento':'plan';
+function sceneHtml(sc,i){
+  const objs=sc.objs||[],done=objs.filter(o=>o.done).length;
+  let h=`<details class="scene" data-id="${sc.id}"${openScenes.has(sc.id)?' open':''}><summary><span class="sc-n">Cena ${i+1}</span><span class="sc-title">${esc(sc.title||'Sem título')}</span><span class="tag">${esc(sc.type)}</span>${objs.length?`<span class="tag">${done}/${objs.length} objetivos</span>`:''}<span class="pill ${statusCls(sc.status)}">${esc(sc.status)}</span></summary><div class="sc-body">`;
+  h+=`<div class="grid g-sc"><label class="f">Título<input ${da('sc','title',sc.id)} value="${esc(sc.title)}"></label><label class="f">Tipo<select ${da('sc','type',sc.id)}>${TYPES.map(t=>`<option${t===sc.type?' selected':''}>${t}</option>`).join('')}</select></label><label class="f">Status<select ${da('sc','status',sc.id)}>${STATUS.map(t=>`<option${t===sc.status?' selected':''}>${t}</option>`).join('')}</select></label></div>`;
+  h+=`<label class="f">Local<input ${da('sc','place',sc.id)} value="${esc(sc.place)}"></label><label class="f">Resumo da cena<textarea ${da('sc','summary',sc.id)}>${esc(sc.summary)}</textarea></label>`;
+  h+=`<div><div class="hint" style="text-transform:uppercase;letter-spacing:.06em;font-size:.82rem">Objetivos</div><div class="objs" style="margin-top:6px">${objs.map(o=>`<div class="obj${o.done?' is-done':''}"><input type="checkbox" ${da('ob','done',o.id)} data-sc="${sc.id}"${o.done?' checked':''} aria-label="Concluído"><input type="text" ${da('ob','t',o.id)} data-sc="${sc.id}" value="${esc(o.t)}" aria-label="Objetivo"><button class="x" data-act="del-obj" data-sc="${sc.id}" data-id="${o.id}" aria-label="Remover objetivo">×</button></div>`).join('')}</div><div style="margin-top:8px"><button class="btn sm" data-act="add-obj" data-sc="${sc.id}">Adicionar objetivo</button></div></div>`;
+  h+=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))"><label class="f">NPCs envolvidos<textarea ${da('sc','npcs',sc.id)} style="min-height:4rem">${esc(sc.npcs)}</textarea></label><label class="f">Segredos do mestre<textarea ${da('sc','secrets',sc.id)} style="min-height:4rem">${esc(sc.secrets)}</textarea></label></div>`;
+  h+=`<div class="row-actions"><button class="btn sm" data-act="sc-up" data-id="${sc.id}"${i===0?' disabled':''}>Subir</button><button class="btn sm" data-act="sc-down" data-id="${sc.id}"${i===T.scenes.length-1?' disabled':''}>Descer</button><button class="btn sm danger" data-act="sc-del" data-id="${sc.id}" data-confirm="Excluir?">Excluir cena</button></div>`;
+  return h+'</div></details>';
+}
+function scriptView(){
+  const total=T.scenes.length,done=T.scenes.filter(s=>s.status==='Concluído').length;
+  let h=`<section class="panel"><h2>Premissa</h2><label class="f">Resumo da campanha (os jogadores também veem)<textarea ${da('tb','premise')}>${esc(T.doc.premise)}</textarea></label></section>`;
+  h+=`<div class="sc-sum"><div class="prog"><span>${done} de ${total} cenas concluídas</span><div class="bar"><i style="width:${total?Math.round(done/total*100):0}%"></i></div></div><div class="chips">${['Todas',...STATUS].map(s=>`<button class="chip" data-act="sc-filter" data-v="${s}" aria-pressed="${scFilter===s}">${s}</button>`).join('')}</div><button class="btn pri" data-act="sc-new">Nova cena</button></div>`;
+  const list=T.scenes.map((sc,i)=>({sc,i})).filter(x=>scFilter==='Todas'||x.sc.status===scFilter);
+  return h+(list.length?list.map(x=>sceneHtml(x.sc,x.i)).join(''):`<p class="empty">${total?'Nenhuma cena com esse status.':'Nenhuma cena ainda.'}</p>`);
+}
+
+/* --- mesa --- */
+function tableInfoView(){
+  const m=role()==='master';
+  let h=`<section class="panel"><h2>${esc(T.doc.name)}</h2>${m?`<label class="f">Nome da mesa<input ${da('tb','name')} value="${esc(T.doc.name)}"></label>`:''}<p style="white-space:pre-wrap;margin:${m?'12px 0 0':'0'}">${m?'':(esc(T.doc.premise)||'<span class="hint">O mestre ainda não escreveu a premissa.</span>')}</p></section>`;
+  h+=`<section class="panel"><h2>Participantes</h2><div class="scroll-x"><table class="mtable"><thead><tr><th>E-mail</th><th>Papel</th><th>Personagem</th></tr></thead><tbody>${T.members.map(x=>{let who='';if(x.role==='npc'){const n=T.npcs.find(k=>k.id===x.npcId);who=n?n.name:'NPC'}else if(x.role==='player'&&m&&T.chars[x.uid])who=T.chars[x.uid].name;return `<tr><td>${esc(x.email)}</td><td><span class="badge ${x.role}">${ROLE_LABEL[x.role]}</span></td><td>${esc(who)}</td></tr>`}).join('')}</tbody></table></div></section>`;
+  if(m){
+    const has=T.doc.inviteActive&&T.doc.inviteCode;
+    h+=`<section class="panel"><h2>Convite</h2><p class="hint" style="margin-bottom:10px">Somente você, criador da mesa, pode gerar e enviar o link. Quem abrir escolhe entrar como Player ou como NPC (e, no caso de NPC, qual NPC atuar). Gere um novo link para invalidar o antigo.</p>
+     ${has?`<label class="f">Link da mesa<input id="invLink" class="codebox" readonly value="${esc(inviteLink())}"></label><div class="row-actions" style="margin-top:10px"><button class="btn pri" data-act="inv-copy">Copiar link</button><button class="btn" data-act="inv-new">Gerar outro link</button><button class="btn danger" data-act="inv-revoke" data-confirm="Cancelar o link?">Cancelar link</button></div>`:`<button class="btn pri" data-act="inv-new">Gerar link de convite</button>`}</section>`;
+    h+=`<section class="panel"><h2>Regra de modificadores <button class="btn sm pen" data-act="rules-toggle" aria-expanded="${rulesOpen}" aria-label="Editar modificadores" title="Editar">${PEN}</button></h2>${rulesOpen?rulesHtml():'<p class="hint">Define o bônus ou penalidade de cada valor de atributo para todos os personagens desta mesa.</p>'}</section>`;
+    h+=`<section class="panel"><h2>Zona de perigo</h2><button class="btn danger" data-act="table-del" data-confirm="Excluir a mesa?">Excluir mesa</button><p class="hint" style="margin-top:8px">Os jogadores perdem o acesso. Não dá para desfazer.</p></section>`;
+  }else{
+    h+=`<section class="panel"><h2>Sair da mesa</h2><button class="btn danger" data-act="leave" data-confirm="Sair da mesa?">Sair da mesa</button><p class="hint" style="margin-top:8px">${role()==='player'?'Sua ficha continua guardada no servidor.':'O NPC volta a ficar livre.'}</p></section>`;
+  }
+  return h;
+}
+
+/* ---------- render ---------- */
+function render(){
+  const y=window.scrollY;
+  const v={setup:setupView,auth:authView,mode:modeView,home:homeView,join:joinView,table:tableView}[screen];
+  APP.innerHTML=v?v():'<p class="empty">Carregando…</p>';
+  if(screen==='table'&&T&&!T.loading&&!T.error)renderDice();
+  window.scrollTo(0,y);
+}
+
+/* ---------- edição de campos ---------- */
+function curArr(l){const c=VC();return c&&c[l]}
+function writeChar(patch,key){const c=T.view&&role()==='master'?T.view:me.uid;const cid=role()==='master'?T.view:me.uid;schedule('c:'+cid+':'+key,()=>updateDoc(charRef(cid),patch))}
+function onEdit(e){
+  const t=e.target;if(!t.dataset||!t.dataset.f||!T&&t.dataset.s!=='cr')return;
+  const s=t.dataset.s,f=t.dataset.f,id=t.dataset.id;
+  let v;if(t.type==='checkbox')v=t.checked;else if(t.type==='number')v=t.value===''?0:Number(t.value);else v=t.value;
+  if(s==='cr'){creating[f]=v;return}
+  if(s==='mm'){
+    if(role()!=='master')return;
+    const key=t.dataset.v,nv=t.value===''?null:Math.round(Number(t.value)),dflt=Math.floor((Number(key)-10)/2),mm={...MM()};
+    if(e.type==='change'){if(nv===null||isNaN(nv))delete mm[key];T.doc.modMap=mm;t.value=mod(Number(key));return}
+    if(nv===null||isNaN(nv)||nv===dflt)delete mm[key];else mm[key]=nv;
+    T.doc.modMap=mm;const cell=t.closest('.mm-cell');if(cell)cell.classList.toggle('custom',mm[key]!==undefined);
+    const k2=Object.keys(mm).length,cnt=$('#mmCount');if(cnt)cnt.textContent=k2+' '+(k2===1?'valor alterado':'valores alterados');
+    const c=VC();if(c)c.attrs.forEach(refreshAttr);
+    const copy={...mm};schedule('tb:mm',()=>updateDoc(ref(),{modMap:copy}));return;
+  }
+  if(s==='tb'){if(role()!=='master')return;T.doc[f]=v;const val=v;schedule('tb:'+f,async()=>{await updateDoc(ref(),{[f]:val});if(f==='name')await setDoc(doc(db,'users',me.uid,'tables',T.id),{name:val},{merge:true})});return}
+  if(s==='c'){
+    if(!canChar(f))return;const c=VC();if(!c)return;c[f]=v;const val=v;writeChar({[f]:val},f);
+    if(f==='hp'||f==='hpMax'){const b=$('#hpbar');if(b){b.style.width=hpPct(c)+'%';b.className=hpClass(c)}}
+    return;
+  }
+  if(s==='li'){
+    const l=t.dataset.l;if(!canList(l))return;const c=VC();if(!c)return;
+    const o=c[l].find(x=>x.id===id);if(!o)return;o[f]=v;
+    if(l==='attrs'&&f==='val')refreshAttr(o);
+    const copy=JSON.parse(JSON.stringify(c[l]));writeChar({[l]:copy},l);return;
+  }
+  if(s==='fx'){
+    if(role()!=='master')return;const c=VC();const a=c.attrs.find(x=>x.id===t.dataset.a);const o=a&&a.fx.find(x=>x.id===id);if(!o)return;o[f]=v;refreshAttr(a);
+    if(f==='val')t.className=v>0?'up':v<0?'down':'';
+    if(f==='on'){const rw=t.closest('.fx-row');if(rw)rw.classList.toggle('off',!v)}
+    const copy=JSON.parse(JSON.stringify(c.attrs));writeChar({attrs:copy},'attrs');return;
+  }
+  if(s==='n'){
+    const n=T.notes.find(x=>x.id===id);if(!n)return;n[f]=v;n.upd=Date.now();const val=v;
+    schedule('n:'+id+':'+f,()=>updateDoc(ref('notes',id),{[f]:val,upd:Date.now()}));
+    const nl=$('#noteList');if(nl)nl.innerHTML=noteListHtml();
+    if(e.type==='change'&&f==='tag'){const ed=$('#noteEd');if(ed)ed.innerHTML=noteEditorHtml()}return;
+  }
+  if(s==='np'){if(role()!=='master')return;const n=T.npcs.find(x=>x.id===id);if(!n)return;n[f]=v;const val=v;schedule('np:'+id+':'+f,()=>updateDoc(ref('npcs',id),{[f]:val}));return}
+  if(s==='sc'){
+    if(role()!=='master')return;const sc=T.scenes.find(x=>x.id===id);if(!sc)return;sc[f]=v;const val=v;schedule('sc:'+id+':'+f,()=>updateDoc(ref('scenes',id),{[f]:val}));
+    if(f==='title'){const ti=$(`details[data-id="${id}"] .sc-title`);if(ti)ti.textContent=v||'Sem título'}
+    if(e.type==='change'&&(f==='status'||f==='type'))render();return;
+  }
+  if(s==='ob'){
+    if(role()!=='master')return;const sc=T.scenes.find(x=>x.id===t.dataset.sc);const o=sc&&sc.objs.find(x=>x.id===id);if(!o)return;o[f]=v;
+    const copy=JSON.parse(JSON.stringify(sc.objs));schedule('sc:'+sc.id+':objs',()=>updateDoc(ref('scenes',sc.id),{objs:copy}));
+    if(e.type==='change'&&f==='done')render();return;
+  }
+}
+function refreshAttr(a){
+  const m=$(`[data-mod="${a.id}"]`),t=$(`[data-tot="${a.id}"]`),b=$(`[data-fxb="${a.id}"]`),n=fxNet(a);
+  if(m)m.textContent=sgn(mod(eff(a)));if(t)t.textContent=eff(a);
+  if(b){b.hidden=!n;b.textContent=sgn(n);b.className='fxb '+(n>0?'up':'down')}
+}
+document.addEventListener('input',e=>{
+  if(e.target.id==='nSearch'){nq=e.target.value;const nl=$('#noteList');if(nl)nl.innerHTML=noteListHtml();return}
+  if(e.target.id==='dCount'){dCount=e.target.value;return}if(e.target.id==='dMod'){dMod=e.target.value;return}
+  onEdit(e);
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='charSel'){T.view=t.value;render();return}
+  if(t.id==='joinNpc'){joinInfo.npcId=t.value;return}
+  if(t.dataset&&t.dataset.up&&t.files&&t.files[0]){
+    const kind=t.dataset.up,file=t.files[0];t.value='';
+    readImage(file).then(async url=>{
+      try{
+        if(kind==='char'){if(!canChar('photo'))return;const c=VC();c.photo=url;await updateDoc(charRef(role()==='master'?T.view:me.uid),{photo:url});render()}
+        else if(kind==='note'){const n=T.notes.find(x=>x.id===T.selNote);if(n){n.img=url;n.upd=Date.now();await updateDoc(ref('notes',n.id),{img:url,upd:n.upd});$('#noteList').innerHTML=noteListHtml();$('#noteEd').innerHTML=noteEditorHtml()}}
+        else if(kind.startsWith('npc:')){const id=kind.slice(4),n=T.npcs.find(x=>x.id===id);if(n){n.img=url;await updateDoc(ref('npcs',id),{img:url});render()}}
+      }catch(er){toast('Não foi possível salvar a imagem.',true)}
+    },()=>toast('Não foi possível ler essa imagem. Use JPG, PNG ou WebP.',true));return;
+  }
+  onEdit(e);
+});
+
+/* ---------- ações ---------- */
+function arm(t){t.dataset.armed='1';t.dataset.label=t.textContent;t.textContent=t.dataset.confirm||'Confirmar?';t.classList.add('armed');setTimeout(()=>{if(t.isConnected&&t.dataset.armed==='1'){t.dataset.armed='';t.textContent=t.dataset.label;t.classList.remove('armed')}},3500)}
+APP.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');if(!t||!APP.contains(t))return;
+  if(t.dataset.confirm!==undefined&&t.dataset.armed!=='1'){arm(t);return}
+  Promise.resolve(act(t.dataset.act,t)).catch(er=>toast(er&&er.code==='permission-denied'?'Sem permissão para essa ação.':'Erro: '+(er&&er.message||er),true));
+});
+APP.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details.scene')){if(d.open)openScenes.add(d.dataset.id);else openScenes.delete(d.dataset.id)}},true);
+APP.addEventListener('submit',async e=>{
+  if(e.target.id!=='authForm')return;e.preventDefault();
+  const em=$('#aEmail').value.trim(),pw=$('#aPass').value;authMsg='';
+  try{
+    if(authMode==='login')await signInWithEmailAndPassword(auth,em,pw);else await createUserWithEmailAndPassword(auth,em,pw);
+  }catch(er){authMsg='!'+(AUTH_ERR[er.code]||'Não foi possível entrar: '+(er.message||er));render();$('#aEmail').value=em}
+});
+const mvScene=async(id,d)=>{const i=T.scenes.findIndex(x=>x.id===id),j=i+d;if(i<0||j<0||j>=T.scenes.length)return;const a=T.scenes[i],b=T.scenes[j],bt=writeBatch(db);bt.update(ref('scenes',a.id),{order:j});bt.update(ref('scenes',b.id),{order:i});await bt.commit()};
+async function act(a,t){
+  const id=t.dataset.id;
+  switch(a){
+    case 'auth-switch':authMode=authMode==='login'?'signup':'login';authMsg='';render();break;
+    case 'auth-reset':{const em=$('#aEmail').value.trim();if(!em){authMsg='!Digite seu e-mail acima e toque em Esqueci a senha.';render();break}
+      try{await sendPasswordResetEmail(auth,em);authMsg='Enviamos um e-mail para redefinir a senha.';}catch(er){authMsg='!'+(AUTH_ERR[er.code]||'Não foi possível enviar.')}render();$('#aEmail').value=em;break}
+    case 'logout':await signOut(auth);location.hash='';break;
+    case 'home':location.hash='#/';break;
+    case 'set-mode':await setDoc(doc(db,'users',me.uid),{email:me.email,mode:t.dataset.m},{merge:true});prof={email:me.email,mode:t.dataset.m};homeTab=t.dataset.m;route();break;
+    case 'home-tab':homeTab=t.dataset.t;render();break;
+    case 'forget':{const tid=id;await deleteDoc(doc(db,'users',me.uid,'tables',tid));if(T&&T.id===tid)location.hash='#/';break}
+    case 'table-new':{
+      const name=($('#newTableName').value||'').trim();if(!name){toast('Dê um nome para a mesa.',true);break}
+      const tid=doc(collection(db,'tables')).id,b=writeBatch(db);
+      b.set(doc(db,'tables',tid),{name,ownerId:me.uid,ownerEmail:me.email,premise:'',modMap:{},inviteActive:false,inviteCode:'',createdAt:Date.now()});
+      b.set(doc(db,'tables',tid,'members',me.uid),{uid:me.uid,email:me.email,role:'master',joinedAt:Date.now()});
+      b.set(doc(db,'users',me.uid,'tables',tid),{name,role:'master',ts:Date.now()});
+      await b.commit();location.hash='#/t/'+tid;break}
+    case 'join-go':{
+      const v=($('#joinLink').value||'').trim(),m=v.match(/#\/join\/([^/\s]+)\/([^/\s]+)/);
+      if(!m){toast('Esse não parece um link de convite.',true);break}location.hash='#/join/'+m[1]+'/'+m[2];break}
+    case 'join-kind':joinInfo.kind=t.dataset.k;render();break;
+    case 'join-do':await doJoin();break;
+    case 'tab':T.tab=t.dataset.t;render();break;
+    /* dados */
+    case 'die':{dCount=$('#dCount').value;dMod=$('#dMod').value;await roll(Number(t.dataset.n),dCount,dMod,'');break}
+    case 'roll-attr':{const c=VC(),at=c.attrs.find(x=>x.id===id);await roll(20,1,mod(eff(at)),'Teste de '+at.name);break}
+    case 'roll-skill':{const c=VC(),sk=c.skills.find(x=>x.id===id);await roll(20,1,sk.bonus,sk.name);break}
+    case 'roll-init':{const c=VC();await roll(20,1,c.init,'Iniciativa');break}
+    /* ficha */
+    case 'hp':{if(role()!=='master')break;const c=VC();c.hp=Math.max(0,c.hp+Number(t.dataset.d));const i=$('[data-s="c"][data-f="hp"]');if(i)i.value=c.hp;const bar=$('#hpbar');if(bar){bar.style.width=hpPct(c)+'%';bar.className=hpClass(c)}writeChar({hp:c.hp},'hp');break}
+    case 'char-create':{
+      const c=creating;if(!c.name.trim()){toast('Dê um nome ao personagem.',true);break}
+      const items=[c.i1,c.i2,c.i3].map(x=>x.trim()).filter(Boolean).slice(0,3).map(n=>({id:uid8(),name:n,qty:1,note:''}));
+      await setDoc(charRef(me.uid),{ownerUid:me.uid,name:c.name.trim(),cls:c.cls,race:c.race,bg:c.bg,align:c.align,story:c.story,look:c.look,traits:c.traits,photo:'',level:1,xp:0,hp:10,hpMax:10,hpTemp:0,ac:10,init:0,speed:'9 m',
+        attrs:['FOR','DES','CON','INT','SAB','CAR'].map((n,i)=>({id:'a'+(i+1),name:n,val:10,fx:[]})),skills:[],items,abilities:[],customs:[]});
+      break}
+    case 'add-li':{const l=t.dataset.l;if(!canList(l))break;const c=VC(),nid=uid8();
+      const def={attrs:{name:'NOVO',val:10,fx:[]},skills:{name:'Nova perícia',bonus:0},items:{name:'Novo item',qty:1,note:''},abilities:{title:'Nova habilidade',tag:'',text:''},customs:{label:'Campo',value:''}}[l];
+      c[l].push({id:nid,...def});const copy=JSON.parse(JSON.stringify(c[l]));writeChar({[l]:copy},l);render();const el=APP.querySelector(`[data-id="${nid}"]`);if(el)el.focus();break}
+    case 'del-li':{const l=t.dataset.l;if(!canList(l))break;const c=VC();c[l]=c[l].filter(x=>x.id!==id);const copy=JSON.parse(JSON.stringify(c[l]));writeChar({[l]:copy},l);render();break}
+    case 'fx-toggle':if(openFx.has(id))openFx.delete(id);else openFx.add(id);render();break;
+    case 'fx-add':{if(role()!=='master')break;const c=VC(),fa=c.attrs.find(x=>x.id===t.dataset.a),isB=t.dataset.k==='buff';fa.fx.push({id:uid8(),name:isB?'Novo buff':'Novo debuff',val:isB?1:-1,on:true});openFx.add(fa.id);writeChar({attrs:JSON.parse(JSON.stringify(c.attrs))},'attrs');render();break}
+    case 'fx-del':{if(role()!=='master')break;const c=VC(),fd=c.attrs.find(x=>x.id===t.dataset.a);fd.fx=fd.fx.filter(x=>x.id!==id);writeChar({attrs:JSON.parse(JSON.stringify(c.attrs))},'attrs');render();break}
+    case 'rules-toggle':rulesOpen=!rulesOpen;render();break;
+    case 'mm-reset':if(role()!=='master')break;T.doc.modMap={};await updateDoc(ref(),{modMap:{}});render();break;
+    case 'photo-del':{const k=t.dataset.k;
+      if(k==='char'){if(!canChar('photo'))break;VC().photo='';await updateDoc(charRef(role()==='master'?T.view:me.uid),{photo:''});render()}
+      else if(k==='note'){const n=T.notes.find(x=>x.id===T.selNote);if(n){n.img='';await updateDoc(ref('notes',n.id),{img:''});render()}}
+      else if(k.startsWith('npc:')){const nid=k.slice(4);const n=T.npcs.find(x=>x.id===nid);if(n){n.img='';await updateDoc(ref('npcs',nid),{img:''});render()}}break}
+    /* npcs */
+    case 'npc-new':{if(role()!=='master')break;await setDoc(doc(col('npcs')),{name:'Novo NPC',desc:'',img:'',claimedBy:null});break}
+    case 'npc-del':{if(role()!=='master')break;await deleteDoc(ref('npcs',id));break}
+    /* notas */
+    case 'note-new':{const nr=doc(col('notes'));T.selNote=nr.id;nq='';await setDoc(nr,{authorUid:me.uid,title:'Nova anotação',tag:'Sessão',pin:false,upd:Date.now(),body:'',img:''});break}
+    case 'note-sel':T.selNote=id;$('#noteList').innerHTML=noteListHtml();$('#noteEd').innerHTML=noteEditorHtml();break;
+    case 'note-pin':{const n=T.notes.find(x=>x.id===id);n.pin=!n.pin;await updateDoc(ref('notes',id),{pin:n.pin});render();break}
+    case 'note-del':T.selNote=null;await deleteDoc(ref('notes',id));break;
+    /* roteiro */
+    case 'sc-new':{if(role()!=='master')break;const sr=doc(col('scenes'));openScenes.add(sr.id);scFilter='Todas';await setDoc(sr,{order:T.scenes.length,title:'Nova cena',type:'Exploração',status:'Planejado',place:'',summary:'',objs:[],npcs:'',secrets:''});break}
+    case 'sc-up':await mvScene(id,-1);break;
+    case 'sc-down':await mvScene(id,1);break;
+    case 'sc-del':await deleteDoc(ref('scenes',id));break;
+    case 'sc-filter':scFilter=t.dataset.v;render();break;
+    case 'add-obj':{const sc=T.scenes.find(x=>x.id===t.dataset.sc);sc.objs=sc.objs||[];sc.objs.push({id:uid8(),t:'Novo objetivo',done:false});openScenes.add(sc.id);await updateDoc(ref('scenes',sc.id),{objs:JSON.parse(JSON.stringify(sc.objs))});render();break}
+    case 'del-obj':{const sc=T.scenes.find(x=>x.id===t.dataset.sc);sc.objs=sc.objs.filter(x=>x.id!==id);await updateDoc(ref('scenes',sc.id),{objs:JSON.parse(JSON.stringify(sc.objs))});render();break}
+    /* mesa */
+    case 'inv-new':await makeInvite();break;
+    case 'inv-revoke':await revokeInvite();break;
+    case 'inv-copy':{const box=$('#invLink');box.focus();box.select();
+      (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(box.value):Promise.reject()).then(()=>toast('Link copiado.'),()=>toast('Link selecionado. Use Ctrl+C para copiar.'));break}
+    case 'table-del':{const tid=T.id,b=writeBatch(db);if(T.doc.inviteCode)b.delete(ref('invites',T.doc.inviteCode));b.delete(doc(db,'users',me.uid,'tables',tid));b.delete(doc(db,'tables',tid));await b.commit();location.hash='#/';break}
+    case 'leave':{const tid=T.id,b=writeBatch(db);if(role()==='npc'&&T.member.npcId)b.update(ref('npcs',T.member.npcId),{claimedBy:null});b.delete(ref('members',me.uid));b.delete(doc(db,'users',me.uid,'tables',tid));await b.commit();location.hash='#/';break}
+  }
+}
+boot();
+</script>
+</body>
+</html>

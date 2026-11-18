@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function authed() { return request.auth != null; }
+    function tdoc(t) { return /databases/$(database)/documents/tables/$(t); }
+    function mdoc(t, u) { return /databases/$(database)/documents/tables/$(t)/members/$(u); }
+    function isOwner(t) { return authed() && get(tdoc(t)).data.ownerId == request.auth.uid; }
+    function isMember(t) { return authed() && exists(mdoc(t, request.auth.uid)); }
+    function myRole(t) { return get(mdoc(t, request.auth.uid)).data.role; }
+
+    // Lista pessoal de mesas de cada usuário
+    match /users/{u} {
+      allow read, write: if authed() && request.auth.uid == u;
+      match /tables/{t} {
+        allow read, write: if authed() && request.auth.uid == u;
+      }
+    }
+
+    match /tables/{t} {
+      // Qualquer usuário logado cria uma mesa em seu próprio nome
+      allow create: if authed() && request.resource.data.ownerId == request.auth.uid;
+      allow read: if isMember(t);
+      // Só o mestre (criador) edita ou apaga a mesa
+      allow update, delete: if isOwner(t);
+
+      // Participantes
+      match /members/{m} {
+        allow read: if isMember(t);
+        allow create: if authed() && m == request.auth.uid && request.resource.data.uid == m && (
+          (request.resource.data.role == 'master' && getAfter(tdoc(t)).data.ownerId == m)
+          || (request.resource.data.role in ['player', 'npc']
+              && request.resource.data.inviteCode is string
+              && exists(/databases/$(database)/documents/tables/$(t)/invites/$(request.resource.data.inviteCode))
+              && (request.resource.data.role == 'player' || request.resource.data.npcId is string))
+        );
+        allow delete: if authed() && (m == request.auth.uid || isOwner(t));
+      }
+
+      // Convites: só o mestre cria e lista; quem tem o código consegue ler o convite
+      match /invites/{c} {
+        allow get: if authed();
+        allow list: if isOwner(t);
+        allow create, update, delete: if isOwner(t);
+      }
+
+      // Fichas dos personagens (um documento por jogador, com o id igual ao uid)
+      match /chars/{c} {
+        allow read: if isOwner(t) || (isMember(t) && c == request.auth.uid);
+
+        // O player cria a ficha com atributos padrão e até 3 itens iniciais
+        allow create: if isMember(t) && myRole(t) == 'player' && c == request.auth.uid
+          && request.resource.data.ownerUid == c
+          && request.resource.data.items.size() <= 3
+          && request.resource.data.level == 1 && request.resource.data.xp == 0
+          && request.resource.data.hp == 10 && request.resource.data.hpMax == 10
+          && request.resource.data.hpTemp == 0 && request.resource.data.ac == 10
+          && request.resource.data.init == 0
+          && request.resource.data.abilities.size() == 0
+          && request.resource.data.customs.size() == 0
+          && request.resource.data.skills.size() == 0
+          && request.resource.data.attrs == [
+               {id: 'a1', name: 'FOR', val: 10, fx: []},
+               {id: 'a2', name: 'DES', val: 10, fx: []},
+               {id: 'a3', name: 'CON', val: 10, fx: []},
+               {id: 'a4', name: 'INT', val: 10, fx: []},
+               {id: 'a5', name: 'SAB', val: 10, fx: []},
+               {id: 'a6', name: 'CAR', val: 10, fx: []}];
+
+        allow update:
+          // Mestre: tudo, menos nome, classe, raça, antecedente e alinhamento
+          if (isOwner(t)
+              && !request.resource.data.diff(resource.data).affectedKeys()
+                   .hasAny(['name', 'cls', 'race', 'bg', 'align', 'ownerUid']))
+          // Player (dono da ficha): identidade, história, aparência, personalidade, perícias e foto
+          || (isMember(t) && myRole(t) == 'player' && c == request.auth.uid
+              && request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['name', 'cls', 'race', 'bg', 'align', 'story', 'look', 'traits', 'skills', 'photo']));
+
+        allow delete: if isOwner(t);
+      }
+
+      // NPCs da mesa (o mestre edita; quem entra por convite pode reivindicar um livre)
+      match /npcs/{n} {
+        allow read: if isMember(t)
+          || (authed() && get(tdoc(t)).data.inviteActive == true);
+        allow create, delete: if isOwner(t);
+        allow update: if isOwner(t)
+          || (authed() && get(tdoc(t)).data.inviteActive == true
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimedBy'])
+              && ((resource.data.claimedBy == null && request.resource.data.claimedBy == request.auth.uid)
+                  || (resource.data.claimedBy == request.auth.uid && request.resource.data.claimedBy == null)));
+      }
+
+      // Anotações: cada pessoa vê e edita só as suas
+      match /notes/{n} {
+        allow create: if isMember(t) && request.resource.data.authorUid == request.auth.uid;
+        allow read, update, delete: if isMember(t) && resource.data.authorUid == request.auth.uid;
+      }
+
+      // Roteiro: somente o mestre
+      match /scenes/{s} {
+        allow read, write: if isOwner(t);
+      }
+
+      // Rolagens de dados compartilhadas
+      match /rolls/{r} {
+        allow read: if isMember(t);
+        allow create: if isMember(t) && request.resource.data.uid == request.auth.uid;
+        allow delete: if isOwner(t);
+      }
+    }
+  }
+}
+npm install -g firebase-tools
